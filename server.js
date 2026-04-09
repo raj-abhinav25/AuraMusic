@@ -140,7 +140,7 @@ app.post('/api/playlists/:id/songs', upload.single('audioFile'), (req, res) => {
         const data = readData();
         const playlist = data.playlists.find(p => p.id === req.params.id);
         if (!playlist) return res.status(404).json({ error: 'Playlist not found' });
-        
+
         // Use provided URL if exists; otherwise use the local uploaded file's relative URL path
         let fileUrl = req.body.url;
         if (req.file) {
@@ -171,7 +171,7 @@ app.delete('/api/playlists/:id/songs/:songId', (req, res) => {
         const data = readData();
         const playlist = data.playlists.find(p => p.id === req.params.id);
         if (!playlist) return res.status(404).json({ error: 'Playlist not found' });
-        
+
         playlist.songs = playlist.songs.filter(s => s.id !== req.params.songId);
         writeData(data);
         res.json({ success: true });
@@ -188,4 +188,7 @@ app.get('*', (req, res) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`Music Player Backend running at http://localhost:${PORT}`);
+});
+app.get("/ibm/cloud/appid/callback", (req, res) => {
+    res.redirect("/");
 });
