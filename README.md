@@ -117,6 +117,7 @@ https://your-app.onrender.com/ibm/cloud/appid/callback  # for production
 |----------|-------------------------------------------|--------------------------|
 | `GET`    | `/api/playlists`                          | Get all playlists        |
 | `POST`   | `/api/playlists`                          | Create a new playlist    |
+| `DELETE` | `/api/playlists/:id`                      | Delete a playlist        |
 | `POST`   | `/api/playlists/:id/songs`                | Add a song to a playlist |
 | `DELETE` | `/api/playlists/:id/songs/:songId`        | Remove a song            |
 

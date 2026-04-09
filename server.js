@@ -166,6 +166,19 @@ app.post('/api/playlists/:id/songs', upload.single('audioFile'), (req, res) => {
     }
 });
 
+app.delete('/api/playlists/:id', (req, res) => {
+    try {
+        const data = readData();
+        const index = data.playlists.findIndex(p => p.id === req.params.id);
+        if (index === -1) return res.status(404).json({ error: 'Playlist not found' });
+        data.playlists.splice(index, 1);
+        writeData(data);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to delete playlist' });
+    }
+});
+
 app.delete('/api/playlists/:id/songs/:songId', (req, res) => {
     try {
         const data = readData();

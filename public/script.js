@@ -34,8 +34,102 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerArtist = document.getElementById('playerArtist');
     const playerCoverArt = document.getElementById('playerCoverArt');
 
+    // Modal element refs
+    const modalOverlay    = document.getElementById('modalOverlay');
+    const promptModal     = document.getElementById('promptModal');
+    const promptInput     = document.getElementById('promptInput');
+    const promptOkBtn     = document.getElementById('promptOkBtn');
+    const promptCancelBtn = document.getElementById('promptCancelBtn');
+    const confirmModal    = document.getElementById('confirmModal');
+    const confirmOkBtn    = document.getElementById('confirmOkBtn');
+    const confirmCancelBtn= document.getElementById('confirmCancelBtn');
+    const alertModal      = document.getElementById('alertModal');
+    const alertOkBtn      = document.getElementById('alertOkBtn');
+
+    // Sidebar (mobile) refs
+    const sidebar           = document.querySelector('.sidebar');
+    const sidebarOverlay    = document.getElementById('sidebarOverlay');
+    const sidebarToggleBtn  = document.getElementById('sidebarToggleBtn');
+
     // 1. App Initialization
     fetchPlaylists();
+
+    // Sidebar open/close helpers
+    function openSidebar()  { sidebar.classList.add('open'); sidebarOverlay.classList.add('visible'); }
+    function closeSidebar() { sidebar.classList.remove('open'); sidebarOverlay.classList.remove('visible'); }
+
+    sidebarToggleBtn.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+    sidebarOverlay.addEventListener('click', closeSidebar);
+    // Close on Escape key
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar(); });
+
+    /* ===== Custom Modal Helpers ===== */
+    function _showModal(el) { modalOverlay.classList.remove('hidden'); el.classList.remove('hidden'); }
+    function _hideModal(el) { el.classList.add('hidden'); modalOverlay.classList.add('hidden'); }
+
+    function showPrompt({ title = 'Input', message = '', placeholder = '', okLabel = 'OK' } = {}) {
+        return new Promise(resolve => {
+            document.getElementById('promptTitle').innerText = title;
+            document.getElementById('promptMessage').innerText = message;
+            promptOkBtn.innerText = okLabel;
+            promptInput.placeholder = placeholder;
+            promptInput.value = '';
+            _showModal(promptModal);
+            setTimeout(() => promptInput.focus(), 50);
+
+            const ok = () => { const v = promptInput.value.trim(); _hideModal(promptModal); cleanup(); resolve(v || null); };
+            const cancel = () => { _hideModal(promptModal); cleanup(); resolve(null); };
+            const key = e => { if (e.key === 'Enter') ok(); if (e.key === 'Escape') cancel(); };
+            const cleanup = () => {
+                promptOkBtn.removeEventListener('click', ok);
+                promptCancelBtn.removeEventListener('click', cancel);
+                document.removeEventListener('keydown', key);
+            };
+            promptOkBtn.addEventListener('click', ok);
+            promptCancelBtn.addEventListener('click', cancel);
+            document.addEventListener('keydown', key);
+        });
+    }
+
+    function showConfirm({ title = 'Are you sure?', message = '', okLabel = 'Delete' } = {}) {
+        return new Promise(resolve => {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            confirmOkBtn.innerText = okLabel;
+            _showModal(confirmModal);
+
+            const ok = () => { _hideModal(confirmModal); cleanup(); resolve(true); };
+            const cancel = () => { _hideModal(confirmModal); cleanup(); resolve(false); };
+            const key = e => { if (e.key === 'Enter') ok(); if (e.key === 'Escape') cancel(); };
+            const cleanup = () => {
+                confirmOkBtn.removeEventListener('click', ok);
+                confirmCancelBtn.removeEventListener('click', cancel);
+                document.removeEventListener('keydown', key);
+            };
+            confirmOkBtn.addEventListener('click', ok);
+            confirmCancelBtn.addEventListener('click', cancel);
+            document.addEventListener('keydown', key);
+        });
+    }
+
+    function showAlert({ title = 'Notice', message = '' } = {}) {
+        return new Promise(resolve => {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            _showModal(alertModal);
+            setTimeout(() => alertOkBtn.focus(), 50);
+
+            const ok = () => { _hideModal(alertModal); cleanup(); resolve(); };
+            const key = e => { if (e.key === 'Enter' || e.key === 'Escape') ok(); };
+            const cleanup = () => {
+                alertOkBtn.removeEventListener('click', ok);
+                document.removeEventListener('keydown', key);
+            };
+            alertOkBtn.addEventListener('click', ok);
+            document.addEventListener('keydown', key);
+        });
+    }
+    /* ================================ */
 
     async function fetchPlaylists() {
         try {
@@ -57,7 +151,13 @@ document.addEventListener('DOMContentLoaded', () => {
         playlists.forEach(pl => {
             const li = document.createElement('li');
             li.className = `playlist-item ${pl.id === currentPlaylistId ? 'active' : ''}`;
-            li.innerHTML = `<i class="fa-solid fa-layer-group"></i> <span>${pl.name}</span>`;
+            li.innerHTML = `
+                <i class="fa-solid fa-layer-group"></i>
+                <span style="flex:1">${pl.name}</span>
+                <button class="playlist-delete-btn" title="Delete Playlist" onclick="event.stopPropagation(); removePlaylist('${pl.id}')">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            `;
             li.onclick = () => selectPlaylist(pl.id);
             playlistContainer.appendChild(li);
         });
@@ -70,6 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPlaylistTitle.innerText = pl.name;
         addSongToggleBtn.classList.remove('hidden');
         renderSongs(pl.songs);
+        // Auto-close drawer on mobile after selecting a playlist
+        if (window.innerWidth <= 768) closeSidebar();
     }
 
     function renderSongs(songs) {
@@ -103,7 +205,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. API Integrations
     createPlaylistBtn.addEventListener('click', async () => {
-        const name = prompt('Name your new playlist:');
+        const name = await showPrompt({
+            title: 'New Playlist',
+            message: 'Give your playlist a name:',
+            placeholder: 'e.g. Chill Vibes, Focus Flow...',
+            okLabel: 'Create'
+        });
         if (!name) return;
         const res = await fetch('/api/playlists', {
             method: 'POST',
@@ -128,7 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = fileInput.files[0];
 
         if (!title || (!url && !file)) {
-            return alert('You must provide a Title and EITHER a URL link OR a Local file.');
+            await showAlert({ title: 'Missing Info', message: 'Provide a track title and either a stream URL or a local audio file.' });
+            return;
         }
 
         // Processing state UI update
@@ -165,11 +273,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileInput.parentElement.querySelector('span').innerText = 'Choose Audio File';
             } else {
                 const errData = await res.json();
-                alert('Server validation failed: ' + errData.error);
+                await showAlert({ title: 'Server Error', message: 'Could not add track: ' + errData.error });
             }
         } catch (e) {
             console.error('File Upload Pipeline broke down:', e);
-            alert('Encountered an error safely storing your track to backend. Is Node running?');
+            await showAlert({ title: 'Upload Failed', message: 'Could not store your track. Is the Node server running?' });
         } finally {
             submitSongBtn.innerText = origText;
             submitSongBtn.disabled = false;
@@ -191,8 +299,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    window.removePlaylist = async (playlistId) => {
+        const confirmed = await showConfirm({
+            title: 'Delete Playlist',
+            message: 'This will permanently remove the playlist and all its tracks. This cannot be undone.',
+            okLabel: 'Delete'
+        });
+        if (!confirmed) return;
+        try {
+            const res = await fetch(`/api/playlists/${playlistId}`, { method: 'DELETE' });
+            if (res.ok) {
+                playlists = playlists.filter(p => p.id !== playlistId);
+                if (currentPlaylistId === playlistId) {
+                    currentPlaylistId = null;
+                    currentPlaylistTitle.innerText = 'Select a Playlist';
+                    songListContainer.innerHTML = '';
+                    addSongToggleBtn.classList.add('hidden');
+                    addSongFormContainer.classList.add('hidden');
+                }
+                renderPlaylists();
+                // Auto-select first remaining playlist
+                if (playlists.length > 0 && !currentPlaylistId) {
+                    selectPlaylist(playlists[0].id);
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     window.removeSong = async (songId) => {
-        if (!confirm('Remove track from playlist?')) return;
+        const confirmed = await showConfirm({
+            title: 'Remove Track',
+            message: 'Remove this track from the playlist?',
+            okLabel: 'Remove'
+        });
+        if (!confirmed) return;
         try {
             const res = await fetch(`/api/playlists/${currentPlaylistId}/songs/${songId}`, {
                 method: 'DELETE'
