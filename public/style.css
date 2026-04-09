@@ -1,0 +1,446 @@
+:root {
+    --bg-dark: #09090b;
+    --sidebar-bg: #18181b;
+    --player-bg: #18181b;
+    --card-bg: #27272a;
+    --card-hover: #3f3f46;
+    --accent: #10b981; /* Shifted to a vibrant Spotify-like green */
+    --accent-hover: #34d399;
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --border: #27272a;
+    --error: #ef4444;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-primary);
+    background-color: var(--bg-dark);
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* App Skeleton Layout */
+.app-container {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: 1fr 90px;
+    height: 100vh;
+}
+
+/* --- Navigation Sidebar --- */
+.sidebar {
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 1.25rem;
+    grid-row: 1 / 2;
+    overflow-y: auto;
+}
+
+.logo {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    letter-spacing: -0.02em;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-header h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.section-header button {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+}
+
+.section-header button:hover {
+    color: var(--text-primary);
+}
+
+.playlist-list {
+    list-style: none;
+    margin-top: 0.5rem;
+}
+
+.playlist-item {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.playlist-item:hover {
+    color: var(--text-primary);
+}
+
+.playlist-item.active {
+    background-color: var(--card-bg);
+    color: var(--accent);
+}
+
+/* --- Main View --- */
+.main-content {
+    background: linear-gradient(180deg, #1f2937 0%, var(--bg-dark) 30%);
+    padding: 2.5rem 3.5rem;
+    overflow-y: auto;
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+}
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+}
+
+.main-header h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+}
+
+/* --- UI Buttons & Form --- */
+.primary-btn {
+    background-color: var(--accent);
+    color: #18181b;
+    border: none;
+    padding: 0.6rem 1.25rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: transform 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.primary-btn:hover {
+    background-color: var(--accent-hover);
+    transform: scale(1.02);
+}
+
+.text-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.text-btn:hover {
+    color: var(--text-primary);
+}
+
+.hidden { display: none !important; }
+
+.add-song-form {
+    background-color: rgba(39, 39, 42, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    animation: slideDown 0.3s ease-out;
+}
+
+.add-song-form h3 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.form-group input {
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    flex: 1;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    border-color: var(--accent);
+}
+
+/* --- List of Songs --- */
+.list-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.song-list {
+    list-style: none;
+    padding-bottom: 2rem;
+}
+
+.song-item {
+    display: grid;
+    grid-template-columns: 50px 1fr 50px;
+    padding: 0.75rem 0.5rem;
+    border-radius: 6px;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.song-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.song-item.playing {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.song-item.playing .song-title {
+    color: var(--accent);
+}
+
+.song-art {
+    width: 40px;
+    height: 40px;
+    background-color: var(--card-bg);
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-secondary);
+    margin-left: 0.5rem;
+}
+
+.song-info {
+    display: flex;
+    flex-direction: column;
+    padding-left: 1rem;
+}
+
+.song-title {
+    font-weight: 500;
+    margin-bottom: 0.2rem;
+    font-size: 1rem;
+}
+
+.song-artist {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+    padding: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.song-item:hover .delete-btn {
+    opacity: 1;
+}
+
+.delete-btn:hover {
+    color: var(--error);
+}
+
+/* --- Player Bottom Bar --- */
+.player-bar {
+    grid-column: 1 / 3;
+    grid-row: 2 / 3;
+    background-color: var(--player-bg);
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    padding: 0 1.5rem;
+    z-index: 10;
+}
+
+.now-playing {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.default-art {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--card-hover), var(--border));
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.default-art.active {
+    background: linear-gradient(135deg, var(--accent), #059669);
+    color: #fff;
+}
+
+.track-info h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.track-info p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.2rem;
+}
+
+/* Player Center Controls */
+.player-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.control-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.control-buttons button {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.1s;
+}
+
+.control-buttons button:hover {
+    color: var(--text-primary);
+}
+
+.play-btn {
+    width: 36px;
+    height: 36px;
+    background-color: var(--text-primary) !important;
+    color: var(--bg-dark) !important;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.play-btn:hover {
+    transform: scale(1.05);
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 600px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--card-hover);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    transition: transform 0.1s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    opacity: 0;
+}
+
+input[type=range]:hover::-webkit-slider-thumb, 
+input[type=range]:focus::-webkit-slider-thumb {
+    opacity: 1;
+}
+
+input[type=range]:focus::-webkit-slider-thumb {
+    background: var(--accent);
+}
+
+/* Volume Control */
+.volume-control {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.volume-control input {
+    width: 100px;
+}
+
+/* Animations */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

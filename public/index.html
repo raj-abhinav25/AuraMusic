@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraMusic Player</title>
+    <meta name="description" content="AuraMusic - Modern Web Player">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-compact-disc fa-spin" style="--fa-animation-duration: 4s;"></i> 
+                <span>AuraMusic</span>
+            </div>
+            
+            <div class="playlists-section">
+                <div class="section-header">
+                    <h2>Your Playlists</h2>
+                    <button id="createPlaylistBtn" title="Create Playlist"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <!-- Dynamic Playlists injected here -->
+                <ul id="playlistContainer" class="playlist-list"></ul>
+            </div>
+        </aside>
+
+        <!-- Main Content Panel -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1 id="currentPlaylistTitle">Select a Playlist</h1>
+                <button id="addSongToggleBtn" class="primary-btn hidden"><i class="fa-solid fa-plus"></i> Add Track</button>
+            </header>
+
+            <!-- Advanced Multi-Format Add Track Form -->
+            <div id="addSongFormContainer" class="add-song-form hidden">
+                <h3>Select Audio Source</h3>
+                <div class="form-group" style="flex-direction: column;">
+                    <div style="display: flex; gap: 1rem;">
+                        <input type="text" id="songTitle" placeholder="Song Title (Required)">
+                        <input type="text" id="songArtist" placeholder="Artist Name">
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
+                        <input type="url" id="songUrl" placeholder="MP3 Stream URL" style="flex: 1;">
+                        
+                        <span style="color: var(--text-secondary); font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">OR UPLOAD LOCAL</span>
+                        
+                        <div class="file-upload-wrapper">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span>Choose Audio File</span>
+                            <input type="file" id="songFile" accept="audio/*">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button id="submitSongBtn" class="primary-btn">Add to Playlist</button>
+                        <button id="cancelSongBtn" class="text-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Playlist View Area -->
+            <div class="songs-container">
+                <div class="list-header">
+                    <div style="width: 50px;"></div>
+                    <div style="flex: 1; padding-left: 1rem; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;">Title & Artist</div>
+                    <div style="width: 50px;"></div>
+                </div>
+                <!-- Dynamic Songs injected here -->
+                <ul id="songList" class="song-list"></ul>
+            </div>
+        </main>
+
+        <!-- Bottom Audio Player Interface -->
+        <div class="player-bar">
+            <!-- Now Playing Widget -->
+            <div class="now-playing">
+                <div class="cover-art default-art" id="playerCoverArt">
+                    <i class="fa-solid fa-music"></i>
+                </div>
+                <div class="track-info">
+                    <h4 id="playerTitle">Ready to play</h4>
+                    <p id="playerArtist">Select a track</p>
+                </div>
+            </div>
+
+            <!-- Core Controls Widget -->
+            <div class="player-controls">
+                <div class="control-buttons">
+                    <button id="prevBtn" title="Previous Track"><i class="fa-solid fa-backward-step"></i></button>
+                    <button id="playBtn" class="play-btn" title="Play"><i class="fa-solid fa-play"></i></button>
+                    <button id="nextBtn" title="Next Track"><i class="fa-solid fa-forward-step"></i></button>
+                </div>
+                <div class="progress-container">
+                    <span id="currentTime">0:00</span>
+                    <input type="range" id="progressBar" min="0" max="100" value="0">
+                    <span id="totalTime">0:00</span>
+                </div>
+            </div>
+
+            <!-- Secondary Controls -->
+            <div class="volume-control">
+                <i class="fa-solid fa-volume-high" id="volumeIcon"></i>
+                <input type="range" id="volumeBar" min="0" max="100" value="100">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Native Audio Engine (Hidden) -->
+    <audio id="audioPlayer"></audio>
+    <script src="script.js"></script>
+</body>
+</html>
