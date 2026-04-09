@@ -725,7 +725,8 @@ input[type=range]:focus::-webkit-slider-thumb {
     }
 
     .sidebar-overlay {
-        display: block; /* exists in DOM, shown/hidden via opacity + pointer-events */
+        display: block;
+        pointer-events: none; /* only intercept taps when visible */
     }
 
     .sidebar-overlay.visible {
