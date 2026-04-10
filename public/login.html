@@ -445,14 +445,20 @@
         /* ── Google Sign-In ── */
         document.getElementById('googleBtn').addEventListener('click', async () => {
             clearMsg();
+            const btn = document.getElementById('googleBtn');
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
             try {
                 await signInWithPopup(auth, googleProvider);
                 // onAuthStateChanged will redirect
             } catch (err) {
-                console.error(err);
-                if (err.code !== 'auth/popup-closed-by-user') {
-                    showMsg(friendlyError(err.code));
+                console.error('Google Sign-In error:', err.code, err.message);
+                if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+                    showMsg(friendlyError(err.code, err.message));
                 }
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
             }
         });
 
@@ -507,7 +513,7 @@
         });
 
         /* ── Human-readable Firebase error messages ── */
-        function friendlyError(code) {
+        function friendlyError(code, rawMessage = '') {
             const map = {
                 'auth/invalid-email':            'Please enter a valid email address.',
                 'auth/user-disabled':            'This account has been disabled.',
@@ -519,8 +525,12 @@
                 'auth/too-many-requests':        'Too many attempts. Please try again later.',
                 'auth/network-request-failed':   'Network error. Check your connection.',
                 'auth/popup-blocked':            'Pop-up was blocked. Please allow pop-ups for this site.',
+                'auth/operation-not-allowed':    'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in methods.',
+                'auth/unauthorized-domain':      'This domain is not authorised. Add it in Firebase Console → Authentication → Settings → Authorised domains.',
+                'auth/internal-error':           'An internal error occurred. Check the browser console for details.',
+                'auth/app-not-authorized':       'App not authorised to use Firebase Authentication.',
             };
-            return map[code] || 'Something went wrong. Please try again.';
+            return map[code] || `Error (${code}): ${rawMessage || 'Something went wrong. Check the browser console (F12) for details.'}`;
         }
     </script>
 </body>
