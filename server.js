@@ -202,6 +202,3 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Music Player Backend running at http://localhost:${PORT}`);
 });
-app.get("/ibm/cloud/appid/callback", (req, res) => {
-    res.redirect("/");
-});
