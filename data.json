@@ -1,58 +1,128 @@
 {
-  "playlists": [
-    {
-      "id": "pl_1",
-      "name": "Chill Vibes",
-      "songs": [
+  "users": {
+    "legacy": {
+      "playlists": [
         {
-          "id": "s1",
-          "title": "Summer Breeze",
-          "artist": "Benjamin Tissot",
-          "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+          "id": "pl_1",
+          "name": "Chill Vibes",
+          "songs": [
+            {
+              "id": "s1",
+              "title": "Summer Breeze",
+              "artist": "Benjamin Tissot",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+            },
+            {
+              "id": "s2",
+              "title": "Creative Minds",
+              "artist": "Benjamin Tissot",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+            }
+          ]
         },
         {
-          "id": "s2",
-          "title": "Creative Minds",
-          "artist": "Benjamin Tissot",
-          "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+          "id": "pl_2",
+          "name": "Focus Flow",
+          "songs": [
+            {
+              "id": "s3",
+              "title": "Deep Focus",
+              "artist": "SoundHelix",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+            },
+            {
+              "id": "s4",
+              "title": "Electronic Echo",
+              "artist": "SoundHelix",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3"
+            },
+            {
+              "id": "s5",
+              "title": "Ambient Drive",
+              "artist": "SoundHelix",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3"
+            }
+          ]
         }
       ]
     },
-    {
-      "id": "pl_2",
-      "name": "Focus Flow",
-      "songs": [
+    "GMn9qMMQLKT9OHKUwYHYqHjdsig2": {
+      "playlists": [
         {
-          "id": "s3",
-          "title": "Deep Focus",
-          "artist": "SoundHelix",
-          "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+          "id": "pl_1775828898717_1",
+          "name": "Chill Vibes",
+          "songs": [
+            {
+              "id": "s1",
+              "title": "Summer Breeze",
+              "artist": "Benjamin Tissot",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+            },
+            {
+              "id": "s2",
+              "title": "Creative Minds",
+              "artist": "Benjamin Tissot",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+            }
+          ]
         },
         {
-          "id": "s4",
-          "title": "Electronic Echo",
-          "artist": "SoundHelix",
-          "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3"
+          "id": "pl_1775828898717_2",
+          "name": "Focus Flow",
+          "songs": [
+            {
+              "id": "s3",
+              "title": "Deep Focus",
+              "artist": "SoundHelix",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+            }
+          ]
         },
         {
-          "id": "s5",
-          "title": "Ambient Drive",
-          "artist": "SoundHelix",
-          "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3"
+          "id": "pl_1775828916518",
+          "name": "shobhon",
+          "songs": []
         }
       ]
     },
-    {
-      "id": "pl_1774454126698",
-      "name": "test",
-      "songs": [
+    "GvKa0JFlyKdYcei4NeZmAGXYT663": {
+      "playlists": [
         {
-          "id": "s_1774454712715",
-          "title": "test",
-          "artist": "Unknown Artist",
-          "url": "/uploads/audio_1774454712700_file_example_MP3_1MG.mp3"
+          "id": "pl_1775828944173_1",
+          "name": "Chill Vibes",
+          "songs": [
+            {
+              "id": "s1",
+              "title": "Summer Breeze",
+              "artist": "Benjamin Tissot",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+            },
+            {
+              "id": "s2",
+              "title": "Creative Minds",
+              "artist": "Benjamin Tissot",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+            }
+          ]
+        },
+        {
+          "id": "pl_1775828944173_2",
+          "name": "Focus Flow",
+          "songs": [
+            {
+              "id": "s3",
+              "title": "Deep Focus",
+              "artist": "SoundHelix",
+              "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+            }
+          ]
+        },
+        {
+          "id": "pl_1775829001893",
+          "name": "onorag",
+          "songs": []
         }
       ]
     }
-  ]
+  }
 }

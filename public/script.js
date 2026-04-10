@@ -51,6 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarOverlay    = document.getElementById('sidebarOverlay');
     const sidebarToggleBtn  = document.getElementById('sidebarToggleBtn');
 
+    // Profile Panel refs
+    const profilePanel      = document.getElementById('profilePanel');
+    const profileOverlay    = document.getElementById('profileOverlay');
+    const userAvatar        = document.getElementById('userAvatar');
+    const closeProfileBtn   = document.getElementById('closeProfileBtn');
+    const statPlaylists     = document.getElementById('statPlaylists');
+    const statSongs         = document.getElementById('statSongs');
+
     // ── Firebase Auth helper ────────────────────────────────────────────────
     // Returns the stored token (fresh, kept alive by index.html's Firebase module)
     function getToken() {
@@ -78,6 +86,29 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarOverlay.addEventListener('click', closeSidebar);
     // Close on Escape key
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar(); });
+
+    // Profile Panel helpers
+    async function openProfilePanel() {
+        profilePanel.classList.add('open');
+        profileOverlay.classList.add('visible');
+        try {
+            const res = await authFetch('/api/profile');
+            const data = await res.json();
+            statPlaylists.innerText = data.playlistCount || 0;
+            statSongs.innerText = data.songCount || 0;
+        } catch (e) {
+            console.error('Error fetching profile stats', e);
+        }
+    }
+    function closeProfilePanel() {
+        profilePanel.classList.remove('open');
+        profileOverlay.classList.remove('visible');
+    }
+
+    userAvatar.addEventListener('click', openProfilePanel);
+    closeProfileBtn.addEventListener('click', closeProfilePanel);
+    profileOverlay.addEventListener('click', closeProfilePanel);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && profilePanel.classList.contains('open')) closeProfilePanel(); });
 
     /* ===== Custom Modal Helpers ===== */
     function _showModal(el) { modalOverlay.classList.remove('hidden'); el.classList.remove('hidden'); }

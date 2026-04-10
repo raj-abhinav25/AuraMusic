@@ -46,12 +46,6 @@
                     <button id="addSongToggleBtn" class="primary-btn hidden"><i class="fa-solid fa-plus"></i> Add Track</button>
                     <div class="user-menu" id="userMenu">
                         <div class="user-avatar" id="userAvatar"><i class="fa-solid fa-user"></i></div>
-                        <div class="user-dropdown" id="userDropdown">
-                            <p class="user-name" id="userName">Loading...</p>
-                            <p class="user-email" id="userEmail"></p>
-                            <hr style="border-color: rgba(255,255,255,0.08); margin: 0.5rem 0;">
-                            <button class="signout-btn" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
-                        </div>
                     </div>
                 </div>
             </header>
@@ -176,6 +170,37 @@
     <!-- Native Audio Engine (Hidden) -->
     <audio id="audioPlayer"></audio>
 
+    <!-- Profile Panel Backdrop -->
+    <div id="profileOverlay" class="sidebar-overlay"></div>
+
+    <!-- Profile Panel -->
+    <aside id="profilePanel" class="profile-panel">
+        <div class="profile-header">
+            <h2>Your Profile</h2>
+            <button id="closeProfileBtn" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="profile-content">
+            <div class="profile-avatar-large" id="profileAvatarLarge"><i class="fa-solid fa-user"></i></div>
+            <h3 class="profile-name" id="userName">Loading...</h3>
+            <p class="profile-email" id="userEmail"></p>
+            
+            <div class="profile-stats">
+                <div class="stat-box">
+                    <span class="stat-value" id="statPlaylists">0</span>
+                    <span class="stat-label">Playlists</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-value" id="statSongs">0</span>
+                    <span class="stat-label">Tracks</span>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <button class="danger-btn signout-btn" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+            </div>
+        </div>
+    </aside>
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp }               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
@@ -217,11 +242,14 @@
             const nameEl  = document.getElementById('userName');
             const emailEl = document.getElementById('userEmail');
             const avatar  = document.getElementById('userAvatar');
+            const avatarLarge = document.getElementById('profileAvatarLarge');
 
             nameEl.textContent  = user.displayName || user.email.split('@')[0];
             emailEl.textContent = user.email;
             if (user.photoURL) {
-                avatar.innerHTML = `<img src="${user.photoURL}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                const imgTag = `<img src="${user.photoURL}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                avatar.innerHTML = imgTag;
+                avatarLarge.innerHTML = imgTag;
             }
 
             // Refresh token every 50 minutes silently
@@ -236,15 +264,6 @@
             await signOut(auth);
             localStorage.removeItem('fbToken');
             window.location.href = '/login.html';
-        });
-
-        // User avatar dropdown toggle
-        document.getElementById('userAvatar').addEventListener('click', (e) => {
-            e.stopPropagation();
-            document.getElementById('userDropdown').classList.toggle('open');
-        });
-        document.addEventListener('click', () => {
-            document.getElementById('userDropdown').classList.remove('open');
         });
     </script>
 

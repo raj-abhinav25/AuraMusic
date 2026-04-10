@@ -60,40 +60,99 @@ const upload = multer({ storage: storage });
 // Data file path
 const dataFile = path.join(__dirname, 'data.json');
 
-// Initialize with some default cool playlists if empty
-if (!fs.existsSync(dataFile)) {
-    const defaultData = {
-        playlists: [
-            {
-                id: 'pl_1',
-                name: 'Chill Vibes',
-                songs: [
-                    { id: 's1', title: 'Summer Breeze', artist: 'Benjamin Tissot', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-                    { id: 's2', title: 'Creative Minds', artist: 'Benjamin Tissot', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
-                ]
-            },
-            {
-                id: 'pl_2',
-                name: 'Focus Flow',
-                songs: [
-                    { id: 's3', title: 'Deep Focus', artist: 'SoundHelix', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
-                    { id: 's4', title: 'Electronic Echo', artist: 'SoundHelix', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3' },
-                    { id: 's5', title: 'Ambient Drive', artist: 'SoundHelix', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3' }
-                ]
+// Helper to ensure data structure is modern
+function ensureDataStructure() {
+    if (!fs.existsSync(dataFile)) {
+        fs.writeFileSync(dataFile, JSON.stringify({ users: {} }, null, 2));
+    } else {
+        try {
+            const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+            // Legacy migration: if it has 'playlists' at root but no 'users' object
+            if (data.playlists && !data.users) {
+                const newData = {
+                    users: {
+                        "legacy": { playlists: data.playlists }
+                    }
+                };
+                fs.writeFileSync(dataFile, JSON.stringify(newData, null, 2));
+            } else if (!data.users) {
+                data.users = {};
+                fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
             }
-        ]
-    };
-    fs.writeFileSync(dataFile, JSON.stringify(defaultData, null, 2));
+        } catch (e) {
+            console.error('Error reading/migrating data.json', e);
+            fs.writeFileSync(dataFile, JSON.stringify({ users: {} }, null, 2));
+        }
+    }
 }
+ensureDataStructure();
 
 const readData = () => JSON.parse(fs.readFileSync(dataFile, 'utf8'));
 const writeData = (data) => fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
 
+// Helper: Get user data (and create defaults if new user)
+function getUserData(uid) {
+    const data = readData();
+    if (!data.users[uid]) {
+        data.users[uid] = {
+            playlists: [
+                {
+                    id: 'pl_' + Date.now() + '_1',
+                    name: 'Chill Vibes',
+                    songs: [
+                        { id: 's1', title: 'Summer Breeze', artist: 'Benjamin Tissot', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+                        { id: 's2', title: 'Creative Minds', artist: 'Benjamin Tissot', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
+                    ]
+                },
+                {
+                    id: 'pl_' + Date.now() + '_2',
+                    name: 'Focus Flow',
+                    songs: [
+                        { id: 's3', title: 'Deep Focus', artist: 'SoundHelix', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' }
+                    ]
+                }
+            ]
+        };
+        writeData(data);
+    }
+    return data.users[uid];
+}
+
+function updateUserData(uid, updateFn) {
+    const data = readData();
+    if (!data.users[uid]) {
+        // initialize if missing
+        getUserData(uid);
+        Object.assign(data, readData()); // refresh
+    }
+    updateFn(data.users[uid]);
+    writeData(data);
+}
+
 /* ================= PROTECTED API ROUTES (require Firebase token) ================= */
+
+app.get('/api/profile', requireAuth, (req, res) => {
+    try {
+        const userData = getUserData(req.user.uid);
+        const playlistCount = userData.playlists.length;
+        const songCount = userData.playlists.reduce((acc, pl) => acc + pl.songs.length, 0);
+
+        res.json({
+            uid: req.user.uid,
+            email: req.user.email,
+            name: req.user.name || req.user.email.split('@')[0],
+            photoURL: req.user.picture || null,
+            playlistCount,
+            songCount
+        });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+});
 
 app.get('/api/playlists', requireAuth, (req, res) => {
     try {
-        res.json(readData().playlists);
+        res.json(getUserData(req.user.uid).playlists);
     } catch (e) {
         res.status(500).json({ error: 'Failed to read data' });
     }
@@ -101,14 +160,14 @@ app.get('/api/playlists', requireAuth, (req, res) => {
 
 app.post('/api/playlists', requireAuth, (req, res) => {
     try {
-        const data = readData();
         const newPlaylist = {
             id: 'pl_' + Date.now().toString(),
             name: req.body.name || 'New Playlist',
             songs: []
         };
-        data.playlists.push(newPlaylist);
-        writeData(data);
+        updateUserData(req.user.uid, (user) => {
+            user.playlists.push(newPlaylist);
+        });
         res.status(201).json(newPlaylist);
     } catch (e) {
         res.status(500).json({ error: 'Failed to create playlist' });
@@ -118,10 +177,7 @@ app.post('/api/playlists', requireAuth, (req, res) => {
 // Use Multer 'upload.single' to handle multipart/form-data
 app.post('/api/playlists/:id/songs', requireAuth, upload.single('audioFile'), (req, res) => {
     try {
-        const data = readData();
-        const playlist = data.playlists.find(p => p.id === req.params.id);
-        if (!playlist) return res.status(404).json({ error: 'Playlist not found' });
-
+        const uid = req.user.uid;
         // Use provided URL if exists; otherwise use the local uploaded file's relative URL path
         let fileUrl = req.body.url;
         if (req.file) {
@@ -138,8 +194,17 @@ app.post('/api/playlists/:id/songs', requireAuth, upload.single('audioFile'), (r
             artist: req.body.artist || 'Unknown Artist',
             url: fileUrl
         };
-        playlist.songs.push(newSong);
-        writeData(data);
+
+        let found = false;
+        updateUserData(uid, (user) => {
+            const playlist = user.playlists.find(p => p.id === req.params.id);
+            if (playlist) {
+                playlist.songs.push(newSong);
+                found = true;
+            }
+        });
+
+        if (!found) return res.status(404).json({ error: 'Playlist not found' });
         res.status(201).json(newSong);
     } catch (e) {
         console.error(e);
@@ -149,11 +214,15 @@ app.post('/api/playlists/:id/songs', requireAuth, upload.single('audioFile'), (r
 
 app.delete('/api/playlists/:id', requireAuth, (req, res) => {
     try {
-        const data = readData();
-        const index = data.playlists.findIndex(p => p.id === req.params.id);
-        if (index === -1) return res.status(404).json({ error: 'Playlist not found' });
-        data.playlists.splice(index, 1);
-        writeData(data);
+        let found = false;
+        updateUserData(req.user.uid, (user) => {
+            const index = user.playlists.findIndex(p => p.id === req.params.id);
+            if (index !== -1) {
+                user.playlists.splice(index, 1);
+                found = true;
+            }
+        });
+        if (!found) return res.status(404).json({ error: 'Playlist not found' });
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Failed to delete playlist' });
@@ -162,12 +231,18 @@ app.delete('/api/playlists/:id', requireAuth, (req, res) => {
 
 app.delete('/api/playlists/:id/songs/:songId', requireAuth, (req, res) => {
     try {
-        const data = readData();
-        const playlist = data.playlists.find(p => p.id === req.params.id);
-        if (!playlist) return res.status(404).json({ error: 'Playlist not found' });
-
-        playlist.songs = playlist.songs.filter(s => s.id !== req.params.songId);
-        writeData(data);
+        let found = false;
+        updateUserData(req.user.uid, (user) => {
+            const playlist = user.playlists.find(p => p.id === req.params.id);
+            if (playlist) {
+                const initialLength = playlist.songs.length;
+                playlist.songs = playlist.songs.filter(s => s.id !== req.params.songId);
+                if (playlist.songs.length !== initialLength) {
+                    found = true;
+                }
+            }
+        });
+        if (!found) return res.status(404).json({ error: 'Playlist or song not found' });
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Failed to delete song' });
