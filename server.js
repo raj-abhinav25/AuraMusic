@@ -3,9 +3,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const session = require('express-session');
-const passport = require('passport');
-const { WebAppStrategy } = require('ibmcloud-appid');
+const admin = require('./firebaseAdmin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,52 +11,34 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 
-// Setup Session
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'aura-music-secret-key',
-    resave: true,
-    saveUninitialized: true
-}));
+// ── Firebase Auth Middleware ──────────────────────────────────────────────────
+// Verifies the Firebase ID Token sent as: Authorization: Bearer <token>
+async function requireAuth(req, res, next) {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-// Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
+    if (!token) {
+        return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    }
 
-passport.serializeUser((user, cb) => cb(null, user));
-passport.deserializeUser((obj, cb) => cb(null, obj));
+    try {
+        req.user = await admin.auth().verifyIdToken(token);
+        return next();
+    } catch (err) {
+        console.error('Token verification failed:', err.message);
+        return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+    }
+}
 
-// Configure App ID Strategy
-passport.use(new WebAppStrategy({
-    tenantId: process.env.APPID_TENANT_ID,
-    clientId: process.env.APPID_CLIENT_ID,
-    secret: process.env.APPID_SECRET,
-    oauthServerUrl: process.env.APPID_OAUTH_SERVER_URL,
-    redirectUri: process.env.APPID_REDIRECT_URI
-}));
-
-// App ID Auth Routes
-app.get('/ibm/cloud/appid/callback', passport.authenticate(WebAppStrategy.STRATEGY_NAME));
-
-app.get('/login', passport.authenticate(WebAppStrategy.STRATEGY_NAME, {
-    successRedirect: '/',
-    forceLogin: true
-}));
-
-app.get('/logout', (req, res) => {
-    WebAppStrategy.logout(req);
-    res.redirect('/');
-});
-
-// Protect all subsequent routes
-app.use((req, res, next) => {
-    if (req.isAuthenticated()) return next();
-    res.redirect('/login');
-});
-
-// Static Files - Protected by the middleware above
+// ── Static Files (public) — served WITHOUT auth (login.html lives here) ───────
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Set up directory for local media
+// ── Auth check endpoint — used by the frontend to validate a token ─────────────
+app.get('/api/auth-status', requireAuth, (req, res) => {
+    res.json({ uid: req.user.uid, email: req.user.email, name: req.user.name });
+});
+
+// ── Set up directory for local media ──────────────────────────────────────────
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -109,8 +89,9 @@ if (!fs.existsSync(dataFile)) {
 const readData = () => JSON.parse(fs.readFileSync(dataFile, 'utf8'));
 const writeData = (data) => fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
 
-/* ================= ROUTES ================= */
-app.get('/api/playlists', (req, res) => {
+/* ================= PROTECTED API ROUTES (require Firebase token) ================= */
+
+app.get('/api/playlists', requireAuth, (req, res) => {
     try {
         res.json(readData().playlists);
     } catch (e) {
@@ -118,7 +99,7 @@ app.get('/api/playlists', (req, res) => {
     }
 });
 
-app.post('/api/playlists', (req, res) => {
+app.post('/api/playlists', requireAuth, (req, res) => {
     try {
         const data = readData();
         const newPlaylist = {
@@ -135,7 +116,7 @@ app.post('/api/playlists', (req, res) => {
 });
 
 // Use Multer 'upload.single' to handle multipart/form-data
-app.post('/api/playlists/:id/songs', upload.single('audioFile'), (req, res) => {
+app.post('/api/playlists/:id/songs', requireAuth, upload.single('audioFile'), (req, res) => {
     try {
         const data = readData();
         const playlist = data.playlists.find(p => p.id === req.params.id);
@@ -166,7 +147,7 @@ app.post('/api/playlists/:id/songs', upload.single('audioFile'), (req, res) => {
     }
 });
 
-app.delete('/api/playlists/:id', (req, res) => {
+app.delete('/api/playlists/:id', requireAuth, (req, res) => {
     try {
         const data = readData();
         const index = data.playlists.findIndex(p => p.id === req.params.id);
@@ -179,7 +160,7 @@ app.delete('/api/playlists/:id', (req, res) => {
     }
 });
 
-app.delete('/api/playlists/:id/songs/:songId', (req, res) => {
+app.delete('/api/playlists/:id/songs/:songId', requireAuth, (req, res) => {
     try {
         const data = readData();
         const playlist = data.playlists.find(p => p.id === req.params.id);
@@ -193,12 +174,12 @@ app.delete('/api/playlists/:id/songs/:songId', (req, res) => {
     }
 });
 
-// Fallback to index.html for unknown routes (SPA like behavior)
+// Fallback — serve index.html for any unmatched GET (SPA behaviour)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Music Player Backend running at http://localhost:${PORT}`);
+    console.log(`AuraMusic backend running at http://localhost:${PORT}`);
 });

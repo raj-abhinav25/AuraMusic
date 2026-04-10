@@ -42,7 +42,18 @@
                     </button>
                     <h1 id="currentPlaylistTitle">Select a Playlist</h1>
                 </div>
-                <button id="addSongToggleBtn" class="primary-btn hidden"><i class="fa-solid fa-plus"></i> Add Track</button>
+                <div class="header-right">
+                    <button id="addSongToggleBtn" class="primary-btn hidden"><i class="fa-solid fa-plus"></i> Add Track</button>
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-avatar" id="userAvatar"><i class="fa-solid fa-user"></i></div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <p class="user-name" id="userName">Loading...</p>
+                            <p class="user-email" id="userEmail"></p>
+                            <hr style="border-color: rgba(255,255,255,0.08); margin: 0.5rem 0;">
+                            <button class="signout-btn" id="signOutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+                        </div>
+                    </div>
+                </div>
             </header>
 
             <!-- Advanced Multi-Format Add Track Form -->
@@ -164,6 +175,79 @@
 
     <!-- Native Audio Engine (Hidden) -->
     <audio id="audioPlayer"></audio>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp }               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getAuth, onAuthStateChanged,
+                 signOut }                     from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+        // Same config as login.html — replace placeholders!
+        const firebaseConfig = {
+            apiKey:            "AIzaSyCRI6imp30I5D9g1OF1yhhowmVEDNUTR5I",
+            authDomain:        "auramusic-9feb5.firebaseapp.com",
+            projectId:         "auramusic-9feb5",
+            storageBucket:     "auramusic-9feb5.firebasestorage.app",
+            messagingSenderId: "760643586517",
+            appId:             "1:760643586517:web:288fa5c43874117726555c",
+            measurementId:     "G-M917N9PSFZ"
+        };
+
+        const fbApp  = initializeApp(firebaseConfig);
+        const auth   = getAuth(fbApp);
+
+        // Token refresh helper — keeps localStorage token fresh
+        async function refreshToken(user) {
+            const token = await user.getIdToken(true);
+            localStorage.setItem('fbToken', token);
+            localStorage.setItem('fbTokenExpiry', Date.now() + 55 * 60 * 1000);
+            return token;
+        }
+
+        // Auth guard
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                localStorage.removeItem('fbToken');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Populate user info UI
+            await refreshToken(user);
+            const nameEl  = document.getElementById('userName');
+            const emailEl = document.getElementById('userEmail');
+            const avatar  = document.getElementById('userAvatar');
+
+            nameEl.textContent  = user.displayName || user.email.split('@')[0];
+            emailEl.textContent = user.email;
+            if (user.photoURL) {
+                avatar.innerHTML = `<img src="${user.photoURL}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            }
+
+            // Refresh token every 50 minutes silently
+            setInterval(() => refreshToken(user), 50 * 60 * 1000);
+
+            // Notify script.js that auth is ready
+            window.dispatchEvent(new CustomEvent('authReady'));
+        });
+
+        // Sign out
+        document.getElementById('signOutBtn').addEventListener('click', async () => {
+            await signOut(auth);
+            localStorage.removeItem('fbToken');
+            window.location.href = '/login.html';
+        });
+
+        // User avatar dropdown toggle
+        document.getElementById('userAvatar').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('open');
+        });
+        document.addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.remove('open');
+        });
+    </script>
+
     <script src="script.js"></script>
 </body>
 </html>

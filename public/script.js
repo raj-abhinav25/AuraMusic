@@ -51,8 +51,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarOverlay    = document.getElementById('sidebarOverlay');
     const sidebarToggleBtn  = document.getElementById('sidebarToggleBtn');
 
-    // 1. App Initialization
-    fetchPlaylists();
+    // ── Firebase Auth helper ────────────────────────────────────────────────
+    // Returns the stored token (fresh, kept alive by index.html's Firebase module)
+    function getToken() {
+        return localStorage.getItem('fbToken') || '';
+    }
+
+    // Authenticated fetch wrapper — attaches Bearer token to every API call
+    function authFetch(url, options = {}) {
+        const token = getToken();
+        options.headers = options.headers || {};
+        options.headers['Authorization'] = `Bearer ${token}`;
+        return fetch(url, options);
+    }
+
+    // 1. App Initialization — wait until Firebase has confirmed the user
+    window.addEventListener('authReady', fetchPlaylists, { once: true });
+    // Fallback: if token already cached (fast page reload), init immediately
+    if (getToken()) fetchPlaylists();
 
     // Sidebar open/close helpers
     function openSidebar()  { sidebar.classList.add('open'); sidebarOverlay.classList.add('visible'); }
@@ -133,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchPlaylists() {
         try {
-            const res = await fetch('/api/playlists');
+            const res = await authFetch('/api/playlists');
             playlists = await res.json();
             renderPlaylists();
             
@@ -212,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
             okLabel: 'Create'
         });
         if (!name) return;
-        const res = await fetch('/api/playlists', {
+        const res = await authFetch('/api/playlists', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name })
@@ -252,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (url) formData.append('url', url);
             if (file) formData.append('audioFile', file);
 
-            const res = await fetch(`/api/playlists/${currentPlaylistId}/songs`, {
+            const res = await authFetch(`/api/playlists/${currentPlaylistId}/songs`, {
                 method: 'POST',
                 // Explicitly letting fetch compute 'multipart/form-data' boundary!
                 body: formData
@@ -307,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (!confirmed) return;
         try {
-            const res = await fetch(`/api/playlists/${playlistId}`, { method: 'DELETE' });
+            const res = await authFetch(`/api/playlists/${playlistId}`, { method: 'DELETE' });
             if (res.ok) {
                 playlists = playlists.filter(p => p.id !== playlistId);
                 if (currentPlaylistId === playlistId) {
@@ -336,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (!confirmed) return;
         try {
-            const res = await fetch(`/api/playlists/${currentPlaylistId}/songs/${songId}`, {
+            const res = await authFetch(`/api/playlists/${currentPlaylistId}/songs/${songId}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
